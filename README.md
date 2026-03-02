@@ -8,6 +8,18 @@ A lightweight Chrome extension that automatically suggests login credentials on 
 
 When working with multiple local environments (`localhost`, `*.test`, `*.home.arpa`, custom hosts), you always end up typing the same default credentials over and over. Sandkey solves this by detecting login forms on those domains and offering one-click autofill, without syncing anything to the cloud or requiring a master password.
 
+| | Other tools | **Sandkey** |
+|---|---|---|
+| Target | All websites | Local / sandbox environments only |
+| Cloud sync | Yes (opt-out at best) | Never — local storage only |
+| Account required | Yes | No |
+| Master password | Required | Not needed |
+| Open source | Partially / no | ✓ fully open source |
+| Zero dependencies | No | ✓ pure HTML/CSS/JS |
+| Wildcard domain matching | No | ✓ with longest-match priority |
+| Framework-compatible autofill | Varies | ✓ React, Vue, Angular |
+| Build step required | Often | No |
+
 ---
 
 ## Features
@@ -33,7 +45,7 @@ Sandkey is not published on the Chrome Web Store — it is intended to be loaded
 3. Enable **Developer mode** (toggle in the top-right corner)
 4. Click **Load unpacked**
 5. Select the `sandkey/` folder
-6. The Sandkey icon (🔐) will appear in your toolbar
+6. The Sandkey icon will appear in your toolbar
 
 ---
 
@@ -41,14 +53,14 @@ Sandkey is not published on the Chrome Web Store — it is intended to be loaded
 
 ### Adding credentials
 
-1. Click the Sandkey icon in the toolbar and select **Gestisci credenziali**, or right-click the icon and choose **Options**
-2. Click **+ Nuova credenziale**
+1. Click the Sandkey icon in the toolbar and select **Manage credentials**, or right-click the icon and choose **Options**
+2. Click **+ New credential**
 3. Fill in the form:
    - **Label** *(optional)* — a human-readable name shown in the dropdown (e.g. "Admin Panel", "Dev Server")
    - **Username** — the username or email to autofill
    - **Password** — the password to autofill
    - **Domains** — one domain pattern per line (see [Domain Matching](#domain-matching) below)
-4. Click **Salva** or press `Ctrl+S` / `Cmd+S`
+4. Click **Save** or press `Ctrl+S` / `Cmd+S`
 
 ### Autofilling a login form
 
@@ -58,7 +70,7 @@ When you navigate to a page whose hostname matches one or more stored credential
 - Click a credential to fill both fields instantly
 - Press `Escape` to dismiss the dropdown without filling
 
-Alternatively, click the **Sandkey toolbar icon** to see matching credentials for the current tab and use the **Compila** button.
+Alternatively, click the **Sandkey toolbar icon** to see matching credentials for the current tab and use the **Fill** button.
 
 ---
 
