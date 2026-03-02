@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SRC="$ROOT/src"
+DIST="$ROOT/dist"
+
+VERSION="$(jq -r .version "$SRC/manifest.json")"
+OUT="$DIST/sandkey-$VERSION.zip"
+
+mkdir -p "$DIST"
+rm -f "$OUT"
+
+zip -j "$OUT" \
+  "$SRC/manifest.json" \
+  "$SRC/content.js" \
+  "$SRC/popup.html" \
+  "$SRC/popup.js" \
+  "$SRC/popup.css" \
+  "$SRC/options.html" \
+  "$SRC/options.js" \
+  "$SRC/options.css"
+
+cd "$SRC"
+zip "$OUT" icons/icon16.png icons/icon48.png icons/icon128.png
+cd "$ROOT"
+
+echo "Released: $OUT"
