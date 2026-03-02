@@ -33,6 +33,21 @@ No background service worker. No remote calls. No dependencies. The entire exten
 
 ---
 
+## Permission justifications
+
+These are required by the Chrome Web Store review process.
+
+**`storage`**
+Used exclusively to persist credentials in `chrome.storage.local`. No data is ever read by or sent to any remote server. All data remains on the user's device and is only accessible by this extension.
+
+**`activeTab`**
+Used to read the URL of the currently active tab so the popup can display matching credentials for that page. The extension does not capture, record, or transmit tab contents or browsing history.
+
+**Host permission: `<all_urls>`**
+Sandkey's content script must be able to run on any URL because developers use an open-ended variety of local and sandbox domains — `localhost`, `*.test`, `*.local`, `*.home.arpa`, custom Docker hostnames, and arbitrary internal hostnames. It is not possible to enumerate these in advance. The content script only activates when a login form is detected on the page; it does not read page content, execute remote code, or transmit any data.
+
+---
+
 ## Key features
 
 - Store multiple credentials, each with a label, username, password, and list of domain patterns
