@@ -26,7 +26,7 @@ When working with multiple local environments (`localhost`, `*.test`, `*.home.ar
 
 - **Automatic form detection** — monitors the page for username/password fields, including forms added dynamically by SPAs
 - **Wildcard domain matching** — `*.test` matches `foo.test`, `bar.test`, etc.
-- **Longest-match priority** — more specific patterns win (`pippo.test` over `*.test`)
+- **Longest-match priority** — more specific patterns win (`api.test` over `*.test`)
 - **Shadow DOM dropdown** — the suggestion UI is fully isolated from page styles; it will never look broken regardless of the host page's CSS
 - **Framework-compatible autofill** — fills inputs using the native value setter and dispatches `input`/`change` events, so React, Vue, and Angular forms detect the change correctly
 - **Popup autofill** — click the toolbar icon to see matching credentials and fill the form with one click
@@ -81,25 +81,25 @@ Domain patterns are matched against `window.location.hostname` (port numbers are
 | Pattern | Matches | Does not match |
 |---|---|---|
 | `localhost` | `localhost`, `localhost:3000`, `localhost:8080` | `my.localhost` |
-| `pippo.test` | `pippo.test` | `sub.pippo.test`, `*.test` |
-| `*.test` | `foo.test`, `bar.test`, `pippo.test` | `a.b.test`, `test` |
-| `*.home.arpa` | `device.home.arpa`, `myserver.home.arpa` | `deep.device.home.arpa` |
-| `*.local` | `myserver.local`, `dev.local` | `a.b.local` |
+| `api.test` | `api.test` | `sub.api.test` |
+| `*.test` | `app.test`, `api.test`, `a.b.test`, `a.b.c.test` | `test` |
+| `*.api.test` | `v1.api.test`, `v2.api.test`, `a.b.api.test` | `api.test` |
+| `*.home.arpa` | `device.home.arpa`, `deep.device.home.arpa` | `home.arpa` |
+| `*.local` | `myserver.local`, `sub.myserver.local` | `local` |
 
 **Wildcard rules:**
-- A wildcard `*` only replaces **one DNS label** — this mirrors standard DNS wildcard behavior
-- `*.test` matches `anything.test` but not `anything.deeper.test`
+- A wildcard `*` matches **one or more DNS labels** — `*.test` covers any subdomain depth
 - Exact matches always beat wildcard matches
-- Among wildcards, longer suffixes score higher (more specific wins)
+- Among wildcards, the longest suffix wins: `*.api.test` scores higher than `*.test` for `v1.api.test`
 
-**Example:** you are on `pippo.test` and have two credentials:
+**Example:** you are on `v1.api.test` and have two credentials:
 
 ```
-Credential A  →  domains: [pippo.test]
+Credential A  →  domains: [*.api.test]
 Credential B  →  domains: [*.test]
 ```
 
-Both are shown in the dropdown, but **Credential A appears first** because `pippo.test` is a more specific match than `*.test`. On `pluto.test`, only Credential B is shown.
+Both match, but **Credential A appears first** because `*.api.test` is more specific than `*.test`. On `app.test`, only Credential B is shown.
 
 ---
 

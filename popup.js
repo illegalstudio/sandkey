@@ -11,7 +11,7 @@ function domainScore(hostname, pattern) {
     const dotSuffix = '.' + suffix;
     if (hostname.endsWith(dotSuffix)) {
       const prefix = hostname.slice(0, hostname.length - dotSuffix.length);
-      if (prefix && !prefix.includes('.')) return suffix.length;
+      if (prefix) return suffix.length;
     }
   }
   return -1;

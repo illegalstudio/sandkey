@@ -13,13 +13,14 @@ function domainScore(hostname, pattern) {
   // Exact match
   if (pattern === hostname) return 10000 + hostname.length;
 
-  // Wildcard: *.suffix matches foo.suffix but NOT foo.bar.suffix
+  // Wildcard: *.suffix matches anything ending in .suffix at any depth.
+  // Longest match wins: *.deeper.test scores higher than *.test.
   if (pattern.startsWith('*.')) {
     const suffix = pattern.slice(2);
     const dotSuffix = '.' + suffix;
     if (hostname.endsWith(dotSuffix)) {
       const prefix = hostname.slice(0, hostname.length - dotSuffix.length);
-      if (prefix && !prefix.includes('.')) return suffix.length;
+      if (prefix) return suffix.length;
     }
   }
 
