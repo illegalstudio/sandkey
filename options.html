@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandkey – Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <img src="icons/icon48.png" class="logo" alt="Sandkey">
+      <div>
+        <div class="title">Sandkey</div>
+        <div class="subtitle">Sandbox credential manager</div>
+      </div>
+      <button id="btn-add" class="btn-primary">+ New credential</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="empty-state" hidden>
+      <img src="icons/icon128.png" class="empty-icon" alt="">
+      <h2>No credentials yet</h2>
+      <p>Create your first credential to get started.<br>
+         Sandkey will suggest it automatically on matching sandbox domains.</p>
+      <button class="btn-primary" id="btn-add-empty">+ New credential</button>
+    </div>
+
+    <div id="credentials-list" class="cred-grid"></div>
+  </main>
+
+  <!-- Modal add/edit -->
+  <div id="modal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h2 id="modal-title">New credential</h2>
+        <button class="btn-close" id="btn-modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="f-label">
+            Label <span class="muted">(optional)</span>
+          </label>
+          <input type="text" id="f-label" placeholder="e.g. Admin Panel, Dev Server…" autocomplete="off">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-username">Username</label>
+            <input type="text" id="f-username" placeholder="admin" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="f-password">Password</label>
+            <div class="input-addon">
+              <input type="password" id="f-password" placeholder="••••••••" autocomplete="new-password">
+              <button type="button" id="toggle-pw" class="btn-addon">Show</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="f-domains">
+            Domains
+            <span class="hint">— one per line, wildcards supported <code>*.test</code></span>
+          </label>
+          <textarea id="f-domains" rows="5"
+            placeholder="localhost&#10;*.test&#10;*.home.arpa&#10;myserver.local"></textarea>
+          <div class="field-note">
+            <strong>*.test</strong> matches <em>anything.test</em> but not <em>a.b.test</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel">Cancel</button>
+        <button class="btn-primary" id="btn-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sandkey</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon48.png" class="logo" alt="Sandkey">
+    <span class="title">Sandkey</span>
+    <button id="btn-settings" title="Settings">⚙️</button>
+  </header>
+
+  <div id="domain-bar">
+    <span id="current-domain">—</span>
+  </div>
+
+  <div id="content">
+    <div id="no-match" hidden>
+      <p id="no-match-msg">No credentials for this domain.</p>
+      <button id="btn-add-cred" class="btn-outline">+ Add credential</button>
+    </div>
+    <div id="matches-list"></div>
+  </div>
+
+  <footer>
+    <button id="btn-options">Manage credentials →</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
