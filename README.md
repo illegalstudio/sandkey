@@ -76,10 +76,11 @@ Alternatively, click the **Sandkey toolbar icon** to see matching credentials fo
 
 ## Domain Matching
 
-Domain patterns are matched against `window.location.hostname` (port numbers are ignored).
+Domain patterns are matched against `window.location.host`, which includes the port when non-standard (e.g. `localhost:3000`). This allows port-specific patterns to take priority over port-agnostic ones.
 
 | Pattern | Matches | Does not match |
 |---|---|---|
+| `localhost:3000` | `localhost:3000` only | `localhost`, `localhost:8080` |
 | `localhost` | `localhost`, `localhost:3000`, `localhost:8080` | `my.localhost` |
 | `api.test` | `api.test` | `sub.api.test` |
 | `*.test` | `app.test`, `api.test`, `a.b.test`, `a.b.c.test` | `test` |
@@ -87,10 +88,14 @@ Domain patterns are matched against `window.location.hostname` (port numbers are
 | `*.home.arpa` | `device.home.arpa`, `deep.device.home.arpa` | `home.arpa` |
 | `*.local` | `myserver.local`, `sub.myserver.local` | `local` |
 
+**Match priority (highest to lowest):**
+1. Exact host match including port — `localhost:3000` visiting `localhost:3000`
+2. Exact hostname match without port — `localhost` visiting `localhost:3000`
+3. Wildcard match — longer suffix wins: `*.api.test` scores higher than `*.test`
+
 **Wildcard rules:**
 - A wildcard `*` matches **one or more DNS labels** — `*.test` covers any subdomain depth
-- Exact matches always beat wildcard matches
-- Among wildcards, the longest suffix wins: `*.api.test` scores higher than `*.test` for `v1.api.test`
+- Port-specific patterns (e.g. `localhost:3000`) only match the exact port; they never act as wildcards
 
 **Example:** you are on `v1.api.test` and have two credentials:
 
@@ -156,7 +161,7 @@ Data is never transmitted to any remote server.
 
 ## Limitations & Known Behaviours
 
-- **Single-level wildcards only** — `*.test` does not match `a.b.test`. This is intentional and mirrors DNS wildcard semantics.
+- **Multi-level wildcards** — `*.test` matches `a.b.test` and any subdomain depth. Use a more specific pattern like `*.api.test` to narrow the scope.
 - **First password field** — when autofilling from the popup, Sandkey targets the first `input[type=password]` found on the page.
 - **Chrome-only** — the extension uses Chrome-specific APIs and Manifest V3 format. It has not been tested on Firefox or other browsers.
 - **No master password** — credentials are stored in plain text in `chrome.storage.local`. This is by design; Sandkey is intended for non-sensitive default development credentials, not production secrets.

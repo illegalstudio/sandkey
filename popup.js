@@ -1,11 +1,14 @@
 'use strict';
 
 // Shared domain matching logic (duplicated from content.js for use in popup context)
-function domainScore(hostname, pattern) {
-  hostname = hostname.toLowerCase();
+function domainScore(host, pattern) {
+  host = host.toLowerCase();
   pattern = pattern.trim().toLowerCase();
   if (!pattern) return -1;
-  if (pattern === hostname) return 10000 + hostname.length;
+  if (pattern === host) return 10000 + host.length;
+  if (/:\d+$/.test(pattern)) return -1;
+  const hostname = host.replace(/:\d+$/, '');
+  if (pattern === hostname) return 5000 + hostname.length;
   if (pattern.startsWith('*.')) {
     const suffix = pattern.slice(2);
     const dotSuffix = '.' + suffix;
@@ -17,11 +20,11 @@ function domainScore(hostname, pattern) {
   return -1;
 }
 
-function matchCredentials(hostname, credentials) {
+function matchCredentials(host, credentials) {
   return credentials
     .map(c => ({
       c,
-      score: Math.max(-1, ...(c.domains || []).map(d => domainScore(hostname, d)))
+      score: Math.max(-1, ...(c.domains || []).map(d => domainScore(host, d)))
     }))
     .filter(({ score }) => score >= 0)
     .sort((a, b) => b.score - a.score)
@@ -39,15 +42,15 @@ function esc(str) {
 async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  let hostname = null;
+  let host = null;
   try {
-    hostname = tab?.url ? new URL(tab.url).hostname : null;
+    host = tab?.url ? new URL(tab.url).host : null;
   } catch { /* invalid URL */ }
 
   const domainEl = document.getElementById('current-domain');
-  domainEl.textContent = hostname || '(special page)';
+  domainEl.textContent = host || '(special page)';
 
-  if (!hostname) {
+  if (!host) {
     const noMatch = document.getElementById('no-match');
     noMatch.hidden = false;
     document.getElementById('no-match-msg').textContent =
@@ -57,7 +60,7 @@ async function init() {
   }
 
   const { credentials = [] } = await chrome.storage.local.get('credentials');
-  const matches = matchCredentials(hostname, credentials);
+  const matches = matchCredentials(host, credentials);
 
   const noMatch = document.getElementById('no-match');
   const list = document.getElementById('matches-list');

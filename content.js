@@ -5,16 +5,25 @@
 // Exact match wins over wildcard. Among wildcards, longer suffix = more specific.
 // *.test matches foo.test (one level only, like DNS wildcards).
 
-function domainScore(hostname, pattern) {
-  hostname = hostname.toLowerCase();
+function domainScore(host, pattern) {
+  host = host.toLowerCase();
   pattern = pattern.trim().toLowerCase();
   if (!pattern) return -1;
 
-  // Exact match
-  if (pattern === hostname) return 10000 + hostname.length;
+  // Exact match — port-aware: "localhost:3000" beats "localhost" for localhost:3000
+  if (pattern === host) return 10000 + host.length;
+
+  // If the pattern specifies a port, only an exact match qualifies (handled above)
+  if (/:\d+$/.test(pattern)) return -1;
+
+  // Pattern has no port — strip port from host and match on hostname only.
+  // This lets "localhost" match "localhost:3000" as a lower-priority fallback.
+  const hostname = host.replace(/:\d+$/, '');
+
+  if (pattern === hostname) return 5000 + hostname.length;
 
   // Wildcard: *.suffix matches anything ending in .suffix at any depth.
-  // Longest match wins: *.deeper.test scores higher than *.test.
+  // Longest match wins: *.api.test scores higher than *.test.
   if (pattern.startsWith('*.')) {
     const suffix = pattern.slice(2);
     const dotSuffix = '.' + suffix;
@@ -256,11 +265,11 @@ function openDropdown(anchor, credentials, pair) {
 // ── Focus handler ─────────────────────────────────────────────────────────────
 
 async function onFocus(e) {
-  const hostname = location.hostname;
-  if (!hostname) return;
+  const host = location.host;
+  if (!host) return;
 
   const credentials = await loadCredentials();
-  const matches = matchCredentials(hostname, credentials);
+  const matches = matchCredentials(host, credentials);
   if (!matches.length) return;
 
   const pair = findPair(e.target);
