@@ -1,6 +1,6 @@
 # Sandkey
 
-A lightweight Chrome extension that automatically suggests login credentials on local development domains — think Bitwarden or 1Password, but built exclusively for the default users developers create on their local machines.
+A lightweight browser extension that automatically suggests login credentials on local development domains — think Bitwarden or 1Password, but built exclusively for the default users developers create on their local machines. Works on **Chrome** and **Safari**.
 
 ---
 
@@ -38,14 +38,38 @@ When working with multiple local environments (`localhost`, `*.test`, `*.home.ar
 
 ## Installation
 
+### Chrome
+
 Sandkey is not published on the Chrome Web Store — it is intended to be loaded as an unpacked extension during development.
 
 1. Clone or download this repository
 2. Open Chrome and navigate to `chrome://extensions`
 3. Enable **Developer mode** (toggle in the top-right corner)
 4. Click **Load unpacked**
-5. Select the `sandkey/` folder
+5. Select the `src/` folder
 6. The Sandkey icon will appear in your toolbar
+
+### Safari (macOS / iOS)
+
+Safari requires a native app wrapper around the web extension. A conversion script is provided to generate the Xcode project automatically.
+
+**Requirements:** macOS, Xcode 14+, Apple Developer account (free for local testing).
+
+```bash
+# Generate the Xcode project (macOS + iOS)
+bin/safari-convert
+
+# Or target a single platform
+bin/safari-convert --macos-only
+bin/safari-convert --ios-only
+```
+
+Then:
+
+1. Open `safari/Sandkey/Sandkey.xcodeproj` in Xcode
+2. Select your signing team in project settings
+3. Build and run (`Cmd+R`)
+4. Enable the extension: **Safari → Settings → Extensions → Sandkey**
 
 ---
 
@@ -112,25 +136,31 @@ Both match, but **Credential A appears first** because `*.api.test` is more spec
 
 ```
 sandkey/
-├── manifest.json     — Extension manifest (Manifest V3)
-├── content.js        — Injected into every page; handles form detection,
-│                       domain matching, Shadow DOM dropdown, and autofill
-├── popup.html        — Toolbar popup markup
-├── popup.js          — Popup logic: reads current tab URL, matches credentials,
-│                       sends autofill message to content script
-├── popup.css         — Popup styles
-├── options.html      — Full-page credential manager markup
-├── options.js        — CRUD logic for credentials (add, edit, delete, reveal)
-└── options.css       — Options page styles
+├── bin/
+│   ├── release              — Build .zip for Chrome distribution
+│   └── safari-convert       — Generate Xcode project for Safari
+├── src/
+│   ├── manifest.json        — Extension manifest (Manifest V3)
+│   ├── browser-polyfill.js  — Cross-browser API normalisation (Chrome ↔ Safari)
+│   ├── content.js           — Injected into every page; handles form detection,
+│   │                          domain matching, Shadow DOM dropdown, and autofill
+│   ├── popup.html           — Toolbar popup markup
+│   ├── popup.js             — Popup logic: reads current tab URL, matches credentials,
+│   │                          sends autofill message to content script
+│   ├── popup.css            — Popup styles
+│   ├── options.html         — Full-page credential manager markup
+│   ├── options.js           — CRUD logic for credentials (add, edit, delete, reveal)
+│   └── options.css          — Options page styles
+└── safari/                  — Generated Xcode project (not checked in)
 ```
 
-No background service worker is needed — the content script communicates directly with the popup via `chrome.runtime.onMessage`.
+No background service worker is needed — the content script communicates directly with the popup via `browser.runtime.onMessage`.
 
 ---
 
 ## Data Storage
 
-All credentials are stored locally using the Chrome Extension `chrome.storage.local` API under the key `credentials`. The data structure is:
+All credentials are stored locally using the browser extension `storage.local` API under the key `credentials`. The data structure is:
 
 ```json
 [
@@ -163,7 +193,7 @@ Data is never transmitted to any remote server.
 
 - **Multi-level wildcards** — `*.test` matches `a.b.test` and any subdomain depth. Use a more specific pattern like `*.api.test` to narrow the scope.
 - **First password field** — when autofilling from the popup, Sandkey targets the first `input[type=password]` found on the page.
-- **Chrome-only** — the extension uses Chrome-specific APIs and Manifest V3 format. It has not been tested on Firefox or other browsers.
+- **Chrome & Safari** — the extension uses a cross-browser polyfill to support both Chrome and Safari. Firefox is not officially supported but may work with minor adjustments.
 - **No master password** — credentials are stored in plain text in `chrome.storage.local`. This is by design; Sandkey is intended for non-sensitive default development credentials, not production secrets.
 - **Special pages** — Sandkey does not run on `chrome://`, `chrome-extension://`, or `file://` pages (Chrome restriction for content scripts).
 

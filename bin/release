@@ -13,6 +13,7 @@ rm -f "$OUT"
 
 zip -j "$OUT" \
   "$SRC/manifest.json" \
+  "$SRC/browser-polyfill.js" \
   "$SRC/content.js" \
   "$SRC/popup.html" \
   "$SRC/popup.js" \

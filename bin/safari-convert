@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ── Safari Web Extension converter ──────────────────────────────────────────
+# Generates an Xcode project from the Chrome/cross-browser extension source.
+# Requires: macOS, Xcode 14+, and the Safari Web Extension converter tool.
+#
+# Usage:
+#   bin/safari-convert              # macOS + iOS targets
+#   bin/safari-convert --macos-only # macOS target only
+#   bin/safari-convert --ios-only   # iOS target only
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SRC="$ROOT/src"
+OUT="$ROOT/safari"
+
+# ── Pre-flight checks ──────────────────────────────────────────────────────
+
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "Error: Safari extension conversion requires macOS."
+  exit 1
+fi
+
+if ! command -v xcrun &>/dev/null; then
+  echo "Error: Xcode command-line tools not found."
+  echo "Install them with: xcode-select --install"
+  exit 1
+fi
+
+if ! xcrun --find safari-web-extension-converter &>/dev/null; then
+  echo "Error: safari-web-extension-converter not found."
+  echo "Make sure Xcode 14+ is installed and selected:"
+  echo "  sudo xcode-select -s /Applications/Xcode.app"
+  exit 1
+fi
+
+# ── Parse arguments ─────────────────────────────────────────────────────────
+
+PLATFORM_FLAGS=()
+case "${1:-}" in
+  --macos-only) PLATFORM_FLAGS=(--macos-only) ;;
+  --ios-only)   PLATFORM_FLAGS=(--ios-only)   ;;
+  *)            ;;  # default: both platforms
+esac
+
+# ── Convert ─────────────────────────────────────────────────────────────────
+
+echo "Converting extension to Safari Web Extension..."
+echo "  Source: $SRC"
+echo "  Output: $OUT"
+echo ""
+
+xcrun safari-web-extension-converter "$SRC" \
+  --project-location "$OUT" \
+  --app-name "Sandkey" \
+  --bundle-identifier "dev.sandkey.app" \
+  --swift \
+  --no-open \
+  "${PLATFORM_FLAGS[@]}"
+
+echo ""
+echo "Done! Xcode project created at: $OUT"
+echo ""
+echo "Next steps:"
+echo "  1. Open $OUT/Sandkey/Sandkey.xcodeproj in Xcode"
+echo "  2. Select your signing team in the project settings"
+echo "  3. Build and run (Cmd+R)"
+echo "  4. Enable the extension in Safari → Settings → Extensions"

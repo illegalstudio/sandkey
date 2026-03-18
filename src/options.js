@@ -7,12 +7,11 @@ let editId = null;
 // ── Storage ───────────────────────────────────────────────────────────────────
 
 const store = {
-  load: () => new Promise(r =>
-    chrome.storage.local.get(STORAGE_KEY, d => r(d[STORAGE_KEY] || []))
-  ),
-  save: () => new Promise(r =>
-    chrome.storage.local.set({ [STORAGE_KEY]: creds }, r)
-  ),
+  load: async () => {
+    const d = await browser.storage.local.get(STORAGE_KEY);
+    return d[STORAGE_KEY] || [];
+  },
+  save: () => browser.storage.local.set({ [STORAGE_KEY]: creds }),
 };
 
 function uid() { return crypto.randomUUID(); }

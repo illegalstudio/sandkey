@@ -40,7 +40,7 @@ function esc(str) {
 }
 
 async function init() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 
   let host = null;
   try {
@@ -59,7 +59,7 @@ async function init() {
     return;
   }
 
-  const { credentials = [] } = await chrome.storage.local.get('credentials');
+  const { credentials = [] } = await browser.storage.local.get('credentials');
   const matches = matchCredentials(host, credentials);
 
   const noMatch = document.getElementById('no-match');
@@ -90,7 +90,7 @@ async function init() {
       btn.disabled = true;
 
       try {
-        const response = await chrome.tabs.sendMessage(tab.id, {
+        const response = await browser.tabs.sendMessage(tab.id, {
           type: 'SANDKEY_FILL',
           username: cred.username || '',
           password: cred.password || '',
@@ -126,14 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
 
   document.getElementById('btn-options').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   });
 
   document.getElementById('btn-settings').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   });
 
   document.getElementById('btn-add-cred').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   });
 });

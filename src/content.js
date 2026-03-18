@@ -49,10 +49,9 @@ function matchCredentials(hostname, credentials) {
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 
-function loadCredentials() {
-  return new Promise(resolve =>
-    chrome.storage.local.get('credentials', d => resolve(d.credentials || []))
-  );
+async function loadCredentials() {
+  const d = await browser.storage.local.get('credentials');
+  return d.credentials || [];
 }
 
 // ── Form detection ───────────────────────────────────────────────────────────
@@ -191,7 +190,7 @@ function openDropdown(anchor, credentials, pair) {
   // Header
   const head = document.createElement('div');
   head.className = 'dp-head';
-  const iconUrl = chrome.runtime.getURL('icons/icon16.png');
+  const iconUrl = browser.runtime.getURL('icons/icon16.png');
   head.innerHTML = `<img src="${iconUrl}" style="width:13px;height:13px;object-fit:contain"><span>Sandkey</span>`;
   dp.appendChild(head);
 
@@ -308,7 +307,7 @@ new MutationObserver(scan).observe(document.documentElement, {
 
 // ── Message handler (popup autofill) ─────────────────────────────────────────
 
-chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
+browser.runtime.onMessage.addListener((msg, _sender, respond) => {
   if (msg.type !== 'SANDKEY_FILL') return false;
 
   const pws = [...document.querySelectorAll('input[type=password]')];
