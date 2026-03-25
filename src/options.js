@@ -190,6 +190,141 @@ function clearError() {
   document.getElementById('modal-error')?.remove();
 }
 
+// ── Export / Import ───────────────────────────────────────────────────────
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(creds, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const ts = new Date().toISOString().slice(0, 10);
+  a.download = `sandkey-export-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+let pendingImport = null;
+
+function openImportModal() {
+  pendingImport = null;
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-filename').textContent = '';
+  document.getElementById('import-dropzone').classList.remove('has-file');
+  document.getElementById('import-preview').hidden = true;
+  document.getElementById('import-summary').textContent = '';
+  document.getElementById('btn-import-confirm').disabled = true;
+  document.getElementById('import-append').checked = true;
+  clearImportError();
+  document.getElementById('modal-import').hidden = false;
+}
+
+function closeImportModal() {
+  document.getElementById('modal-import').hidden = true;
+  pendingImport = null;
+}
+
+function showImportError(msg) {
+  clearImportError();
+  const err = document.createElement('p');
+  err.className = 'form-error';
+  err.id = 'import-error';
+  err.textContent = msg;
+  document.querySelector('#modal-import .modal-body').appendChild(err);
+}
+
+function clearImportError() {
+  document.getElementById('import-error')?.remove();
+}
+
+function handleImportFile(file) {
+  clearImportError();
+  if (!file) return;
+
+  if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+    showImportError('Please select a valid .json file.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) {
+        showImportError('Invalid format: JSON must be an array of credentials.');
+        return;
+      }
+
+      const valid = data.every(c =>
+        c && typeof c === 'object' &&
+        (typeof c.username === 'string' || typeof c.password === 'string') &&
+        Array.isArray(c.domains)
+      );
+      if (!valid) {
+        showImportError('Invalid format: each credential must have at least username or password, and a domains array.');
+        return;
+      }
+
+      pendingImport = data.map(c => ({
+        id: c.id || uid(),
+        label: c.label || '',
+        username: c.username || '',
+        password: c.password || '',
+        domains: c.domains || [],
+      }));
+
+      document.getElementById('import-filename').textContent = file.name;
+      document.getElementById('import-dropzone').classList.add('has-file');
+      document.getElementById('btn-import-confirm').disabled = false;
+      updateImportPreview();
+    } catch {
+      showImportError('Cannot parse file: invalid JSON.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function updateImportPreview() {
+  if (!pendingImport) return;
+  const preview = document.getElementById('import-preview');
+  const summary = document.getElementById('import-summary');
+  const appendOnly = document.getElementById('import-append').checked;
+
+  if (appendOnly) {
+    const existingKeys = new Set(creds.map(c => `${c.username}|${c.domains.sort().join(',')}`));
+    const newCount = pendingImport.filter(c =>
+      !existingKeys.has(`${c.username}|${c.domains.sort().join(',')}`)
+    ).length;
+    summary.textContent = `${newCount} new credential(s) will be added. ${pendingImport.length - newCount} already exist and will be skipped.`;
+  } else {
+    summary.textContent = `All existing credentials will be replaced with ${pendingImport.length} imported credential(s).`;
+  }
+
+  preview.hidden = false;
+}
+
+async function confirmImport() {
+  if (!pendingImport) return;
+
+  const appendOnly = document.getElementById('import-append').checked;
+
+  if (appendOnly) {
+    const existingKeys = new Set(creds.map(c => `${c.username}|${c.domains.sort().join(',')}`));
+    const newEntries = pendingImport.filter(c =>
+      !existingKeys.has(`${c.username}|${c.domains.sort().join(',')}`)
+    );
+    newEntries.forEach(c => { c.id = uid(); });
+    creds.push(...newEntries);
+  } else {
+    creds = pendingImport.map(c => ({ ...c, id: uid() }));
+  }
+
+  await store.save();
+  render();
+  closeImportModal();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -218,16 +353,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = f.type === 'password' ? 'Show' : 'Hide';
   });
 
+  // Export / Import buttons
+  document.getElementById('btn-export').addEventListener('click', exportJSON);
+  document.getElementById('btn-import').addEventListener('click', openImportModal);
+
+  // Import modal controls
+  document.getElementById('btn-import-close').addEventListener('click', closeImportModal);
+  document.getElementById('btn-import-cancel').addEventListener('click', closeImportModal);
+  document.getElementById('btn-import-confirm').addEventListener('click', confirmImport);
+
+  document.getElementById('modal-import').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-import')) closeImportModal();
+  });
+
+  // File picker via dropzone click
+  const dropzone = document.getElementById('import-dropzone');
+  const fileInput = document.getElementById('import-file');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleImportFile(fileInput.files[0]);
+  });
+
+  // Drag & drop
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('dragover');
+  });
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleImportFile(e.dataTransfer.files[0]);
+  });
+
+  // Append-only toggle updates preview
+  document.getElementById('import-append').addEventListener('change', updateImportPreview);
+
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     const modalOpen = !document.getElementById('modal').hidden;
+    const importOpen = !document.getElementById('modal-import').hidden;
 
-    if (e.key === 'Escape' && modalOpen) {
-      closeModal();
-      return;
+    if (e.key === 'Escape') {
+      if (importOpen) { closeImportModal(); return; }
+      if (modalOpen) { closeModal(); return; }
     }
 
-    // Ctrl/Cmd+S to save while modal is open
     if ((e.ctrlKey || e.metaKey) && e.key === 's' && modalOpen) {
       e.preventDefault();
       saveCred();
