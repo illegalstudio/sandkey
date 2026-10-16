@@ -38,13 +38,19 @@ When working with multiple local environments (`localhost`, `*.test`, `*.home.ar
 
 ## Installation
 
-Sandkey is not published on the Chrome Web Store — it is intended to be loaded as an unpacked extension during development.
+### Chrome Web Store
+
+Install Sandkey from the [Chrome Web Store](https://chromewebstore.google.com/detail/sandkey/koohoomgojfknaoilpochdceohbebjpn).
+
+### From source (development)
+
+To load the extension unpacked while developing:
 
 1. Clone or download this repository
 2. Open Chrome and navigate to `chrome://extensions`
 3. Enable **Developer mode** (toggle in the top-right corner)
 4. Click **Load unpacked**
-5. Select the `sandkey/` folder
+5. Select the `src/` folder (the directory that contains `manifest.json`)
 6. The Sandkey icon will appear in your toolbar
 
 ---
